@@ -63,34 +63,27 @@ export default function App() {
     let currentTime = details.time;
     
     const calculatedItems = agendaItems.map((item, index) => {
-      // First item's time is always the meeting start time (controlled by user)
-      if (index === 0) {
-        return { ...item, time: details.time };
-      }
-      
-      // For subsequent items, time is previous item's time + previous item's duration
-      // We need to look at the previous item in the *calculated* chain
-      // However, since map runs sequentially, we can track `currentTime` outside
-      
-      const prevItem = agendaItems[index - 1];
-      
-      // Update the current item's start time to be the running `currentTime`
-      // If it's a section header, we often clear the time visually, but mathematically it starts when the prev ends.
-      // But typically headers occupy 0 time or are just markers. If user gave it duration, we count it.
-      
-      const itemStartTime = currentTime;
-      
-      // Advance time for the *next* item
+      // Capture the calculated start time for the current item
+      const thisItemTime = currentTime;
+
+      // Update the running time for the NEXT item by adding current item's duration
+      // We do this for ALL items, including the first one, so the second item gets the correct start time.
       if (item.duration) {
          currentTime = addMinutes(currentTime, item.duration);
       }
       
-      // If it's a header, we usually don't display the time, but we store it just in case
+      // First item's time is always locked to the meeting start time (controlled by user)
+      if (index === 0) {
+        return { ...item, time: details.time };
+      }
+      
+      // If it's a section header, we usually don't display the time (visual preference)
       if (item.type === AgendaItemType.SECTION_HEADER) {
-        return { ...item, time: "" }; // Visual choice: empty time for headers
+        return { ...item, time: "" }; 
       }
 
-      return { ...item, time: itemStartTime };
+      // For all other items, use the calculated time
+      return { ...item, time: thisItemTime };
     });
 
     // Deep compare to avoid infinite render loops
@@ -150,7 +143,7 @@ export default function App() {
   // --- Handlers: Toolbar ---
 
   const handlePrint = () => {
-    alert("Please ensure the page is scaled to fit one A4 page in the print preview before saving as PDF.");
+    // alert("Please ensure the page is scaled to fit one A4 page in the print preview before saving as PDF.");
     window.print();
   };
 
@@ -200,7 +193,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-200 pb-20 pt-24 flex justify-center font-sans antialiased print:bg-white print:p-0">
+    <div className="min-h-screen bg-gray-200 pb-20 pt-24 flex justify-center font-sans antialiased print:bg-white print:p-0 print:block">
       
       {/* --- Floating Toolbar --- */}
       <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-slate-800 text-white rounded-lg shadow-2xl p-2 z-50 flex items-center gap-2 print:hidden transition-all">
@@ -230,7 +223,7 @@ export default function App() {
       {/* --- A4 Paper Container --- */}
       <div 
         style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top center' }}
-        className="w-[210mm] min-h-[297mm] bg-white shadow-2xl p-8 relative flex flex-col text-slate-800 print:shadow-none print:w-full print:transform-none"
+        className="w-[210mm] min-h-[297mm] bg-white shadow-2xl p-8 relative flex flex-col text-slate-800 print:shadow-none print:w-[210mm] print:h-[297mm] print:transform-none print:m-0 print:overflow-hidden"
       >
         
         {/* --- Decoration: Top Right --- */}
