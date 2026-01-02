@@ -2,12 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { AgendaItemType, AgendaItem } from './types';
 import { MEETING_DETAILS, AGENDA_ITEMS, OFFICERS, WEEKDAYS, MONTHS } from './constants';
 
-// --- Assets ---
-// Using the official Toastmasters International URL which is more reliable globally (including China) than Wikimedia
-// This URL serves the standard logo.
-const LOGO_SRC = "https://www.toastmasters.org/~/media/078335032b4a4282855792c011b93222.ashx";
-
-
 // --- Helpers ---
 
 const AutoResizeTextarea = ({ value, onChange, className, ...props }: any) => {
@@ -239,12 +233,37 @@ export default function App() {
         className="w-[210mm] min-h-[297mm] bg-white shadow-2xl p-8 relative flex flex-col text-slate-800 print:shadow-none print:w-full print:transform-none"
       >
         
+        {/* --- Decoration: Top Right --- */}
+        <div className="absolute top-0 right-0 w-52 h-52 pointer-events-none overflow-hidden z-0 rounded-bl-[80px]">
+           <svg viewBox="0 0 200 200" className="w-full h-full opacity-80" preserveAspectRatio="none">
+              {/* Yellow Corner Circle */}
+              <circle cx="200" cy="0" r="140" fill="#F2DF74" fillOpacity="0.3" />
+              {/* Blue Curved Shape */}
+              <path d="M200 0 L200 90 Q 140 90 90 40 Q 60 10 50 0 Z" fill="#004165" fillOpacity="0.15" />
+              {/* Red Accent Line/Bar */}
+              <rect x="185" y="0" width="15" height="120" fill="#772432" fillOpacity="0.8" />
+              <rect x="100" y="0" width="100" height="8" fill="#772432" fillOpacity="0.4" />
+           </svg>
+        </div>
+
+        {/* --- Decoration: Bottom Left --- */}
+        <div className="absolute bottom-0 left-0 w-64 h-32 pointer-events-none overflow-hidden z-0">
+           <svg viewBox="0 0 200 100" className="w-full h-full opacity-60" preserveAspectRatio="none">
+              <path d="M0 100 L 0 20 Q 50 100 150 100 Z" fill="#004165" fillOpacity="0.1" />
+              <circle cx="0" cy="100" r="60" fill="#F2DF74" fillOpacity="0.3" />
+           </svg>
+        </div>
+
         {/* --- Header Section --- */}
-        <header className="border-b-2 border-tm-red/30 pb-4 mb-4">
+        <header className="border-b-2 border-tm-red/30 pb-4 mb-4 relative z-10">
           <div className="flex justify-between items-end mb-2">
             <div className="flex flex-col justify-center">
               <h1 className="text-3xl font-bold text-tm-blue tracking-wide leading-tight">汕头国际演讲俱乐部</h1>
               <h2 className="text-xl font-bold text-tm-red uppercase italic tracking-widest leading-tight">Shantou Toastmasters</h2>
+              {/* Subtitle Moved Here */}
+              <h3 className="text-sm font-bold text-tm-blue/60 tracking-wider mt-1 border-t border-tm-blue/10 pt-1 inline-block">
+                粤东首家头马国际演讲俱乐部
+              </h3>
             </div>
             
             <div className="bg-tm-red text-white px-4 py-2 rounded-sm font-bold text-xl shadow-sm print:bg-tm-red print:text-white print:print-color-adjust-exact mb-2">
@@ -261,7 +280,7 @@ export default function App() {
         </header>
 
         {/* --- Theme Section --- */}
-        <div className="mb-6">
+        <div className="mb-6 relative z-10">
           <div className="flex items-baseline gap-2 mb-2 w-full">
             <h3 className="text-tm-blue font-bold text-lg uppercase whitespace-nowrap">THEME:</h3>
             <input 
@@ -272,18 +291,19 @@ export default function App() {
               placeholder="Enter Theme Here"
             />
           </div>
-          <div className="bg-gray-50 border-l-4 border-tm-red p-3 text-sm italic text-slate-700 print:bg-gray-50 print:border-tm-red">
+          {/* Enhanced Quote Style */}
+          <div className="bg-yellow-50/50 border-l-4 border-tm-blue p-4 mb-2 print:bg-transparent print:border-tm-blue rounded-r-md">
             <AutoResizeTextarea
               value={details.quote}
               onChange={(e: any) => handleDetailChange('quote', e.target.value)}
-              className="w-full bg-transparent"
+              className="w-full bg-transparent text-lg font-serif italic text-tm-blue placeholder-tm-blue/30 leading-relaxed font-medium"
               placeholder="Enter your quote here..."
             />
           </div>
         </div>
 
         {/* --- Main Content Grid --- */}
-        <div className="grid grid-cols-12 gap-6 flex-grow">
+        <div className="grid grid-cols-12 gap-6 flex-grow relative z-10">
           
           {/* LEFT COLUMN (Agenda) - Approx 60-65% */}
           <div className="col-span-7 flex flex-col">
@@ -379,16 +399,7 @@ export default function App() {
           {/* RIGHT COLUMN (Sidebar) - Approx 35-40% */}
           <div className="col-span-5 space-y-4">
             
-            {/* Logo Placement */}
-            <div className="flex flex-col items-center justify-center mb-2 pt-2">
-              <img 
-                 src={LOGO_SRC} 
-                 alt="Toastmasters International" 
-                 className="w-24 h-auto object-contain drop-shadow-sm print:filter-none mb-1" 
-                 referrerPolicy="no-referrer"
-              />
-              <span className="text-[10px] font-bold text-tm-red tracking-wider">www.toastmasters.org</span>
-            </div>
+            {/* LOGO REMOVED */}
 
             {/* Time & Venue Box */}
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-0 overflow-hidden shadow-sm print:bg-gray-50 print:border-gray-200">
@@ -538,17 +549,12 @@ export default function App() {
         </div>
 
         {/* --- Footer --- */}
-        <div className="mt-auto pt-4 border-t-2 border-tm-yellow/50">
+        <div className="mt-auto pt-4 border-t-2 border-tm-yellow/50 relative z-10">
           <div className="text-center">
              <h4 className="text-tm-blue font-bold italic tracking-widest text-sm mb-1 uppercase">Club Mission</h4>
              <p className="text-[10px] text-slate-500 italic max-w-2xl mx-auto mb-4 leading-relaxed">
                "We provide a supportive and positive learning experience in which members are empowered to develop communication and leadership skills, resulting in greater self-confidence and personal growth."
              </p>
-             
-             {/* New Text Added Here */}
-             <div className="mb-2 text-xs font-bold text-tm-red">
-               粤东首家头马国际演讲俱乐部
-             </div>
 
              <div className="text-xs font-bold text-tm-blue tracking-[0.5em] uppercase opacity-70">
                Connect Learn Grow
