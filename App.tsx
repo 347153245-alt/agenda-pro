@@ -222,8 +222,9 @@ export default function App() {
 
       {/* --- A4 Paper Container --- */}
       <div 
+        id="agenda-container"
         style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top center' }}
-        className="w-[210mm] min-h-[297mm] bg-white shadow-2xl p-8 relative flex flex-col text-slate-800 print:shadow-none print:w-[210mm] print:h-[297mm] print:transform-none print:m-0 print:overflow-hidden"
+        className="w-[210mm] h-[297mm] bg-white shadow-2xl p-5 relative flex flex-col text-slate-800 print:shadow-none print:m-0 print:overflow-hidden box-border"
       >
         
         {/* --- Decoration: Top Right --- */}
@@ -248,8 +249,8 @@ export default function App() {
         </div>
 
         {/* --- Header Section --- */}
-        <header className="border-b-2 border-tm-red/30 pb-4 mb-4 relative z-10">
-          <div className="flex justify-between items-end mb-2">
+        <header className="border-b-2 border-tm-red/30 pb-2 mb-2 relative z-10">
+          <div className="flex justify-between items-end mb-1">
             <div className="flex flex-col justify-center">
               <h1 className="text-3xl font-bold text-tm-blue tracking-wide leading-tight">汕头国际演讲俱乐部</h1>
               <h2 className="text-xl font-bold text-tm-red uppercase italic tracking-widest leading-tight">Shantou Toastmasters</h2>
@@ -273,8 +274,8 @@ export default function App() {
         </header>
 
         {/* --- Theme Section --- */}
-        <div className="mb-6 relative z-10">
-          <div className="flex items-baseline gap-2 mb-2 w-full">
+        <div className="mb-3 relative z-10">
+          <div className="flex items-baseline gap-2 mb-1 w-full">
             <h3 className="text-tm-blue font-bold text-lg uppercase whitespace-nowrap">THEME:</h3>
             <input 
               type="text"
@@ -285,7 +286,7 @@ export default function App() {
             />
           </div>
           {/* Enhanced Quote Style */}
-          <div className="bg-yellow-50/50 border-l-4 border-tm-blue p-4 mb-2 print:bg-transparent print:border-tm-blue rounded-r-md">
+          <div className="bg-yellow-50/50 border-l-4 border-tm-blue p-2 mb-1 print:bg-transparent print:border-tm-blue rounded-r-md">
             <AutoResizeTextarea
               value={details.quote}
               onChange={(e: any) => handleDetailChange('quote', e.target.value)}
@@ -296,17 +297,17 @@ export default function App() {
         </div>
 
         {/* --- Main Content Grid --- */}
-        <div className="grid grid-cols-12 gap-6 flex-grow relative z-10">
+        <div className="grid grid-cols-12 gap-x-4 gap-y-2 flex-grow relative z-10 items-stretch">
           
           {/* LEFT COLUMN (Agenda) - Approx 60-65% */}
           <div className="col-span-7 flex flex-col">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-xs uppercase text-slate-500 font-bold border-b border-gray-200">
-                  <th className="text-left py-2 w-12">Time</th>
-                  <th className="text-left py-2">Activity</th>
-                  <th className="text-right py-2 w-24">Role</th>
-                  <th className="text-right py-2 w-10">Dur.</th>
+                  <th className="text-left py-1 w-12">Time</th>
+                  <th className="text-left py-1">Activity</th>
+                  <th className="text-right py-1 w-24">Role</th>
+                  <th className="text-right py-1 w-10">Dur.</th>
                   <th className="w-6 print:hidden"></th>
                 </tr>
               </thead>
@@ -317,8 +318,8 @@ export default function App() {
                   return (
                     <tr key={idx} className="hover:bg-blue-50/50 group print:hover:bg-transparent relative">
                       {isHeader ? (
-                         <td colSpan={4} className="py-1">
-                          <div className="bg-tm-red text-white font-bold text-xs uppercase py-1 rounded-sm shadow-sm mt-2 mb-1 flex justify-center print:bg-tm-red print:text-white print:print-color-adjust-exact">
+                         <td colSpan={4} className="py-0.5">
+                          <div className="bg-tm-red text-white font-bold text-xs uppercase py-1 rounded-sm shadow-sm mt-1 mb-0.5 flex justify-center print:bg-tm-red print:text-white print:print-color-adjust-exact">
                             <input
                               type="text"
                               value={item.activity}
@@ -329,7 +330,7 @@ export default function App() {
                         </td>
                       ) : (
                         <>
-                          <td className="py-1 align-middle">
+                          <td className="py-0.5 align-middle">
                             {idx === 0 ? (
                               <input
                                 type="time"
@@ -341,7 +342,7 @@ export default function App() {
                               <span className="text-tm-blue font-bold text-xs font-mono block py-1">{item.time}</span>
                             )}
                           </td>
-                          <td className="py-1 align-middle">
+                          <td className="py-0.5 align-middle">
                             <input
                               type="text"
                               value={item.activity}
@@ -349,7 +350,7 @@ export default function App() {
                               className="font-medium text-slate-800 bg-transparent w-full outline-none border-b border-transparent focus:border-gray-300 placeholder-gray-400"
                             />
                           </td>
-                          <td className="py-1 align-middle">
+                          <td className="py-0.5 align-middle">
                             <input
                               type="text"
                               value={item.role}
@@ -357,7 +358,7 @@ export default function App() {
                               className="text-right text-slate-600 italic text-xs bg-transparent w-full outline-none border-b border-transparent focus:border-gray-300 placeholder-gray-300"
                             />
                           </td>
-                          <td className="py-1 align-middle">
+                          <td className="py-0.5 align-middle">
                             <input
                               type="text"
                               value={item.duration}
@@ -390,7 +391,7 @@ export default function App() {
           </div>
 
           {/* RIGHT COLUMN (Sidebar) - Approx 35-40% */}
-          <div className="col-span-5 space-y-4">
+          <div className="col-span-5 space-y-2">
             
             {/* LOGO REMOVED */}
 
@@ -399,8 +400,8 @@ export default function App() {
               <div className="bg-white p-2 border-b border-gray-100 text-xs font-bold text-tm-blue uppercase flex items-center gap-1">
                  🕒 Time & Venue
               </div>
-              <div className="p-3">
-                <div className="flex flex-col gap-2 mb-2">
+              <div className="p-2">
+                <div className="flex flex-col gap-1 mb-1">
                   <div className="flex justify-between items-center text-sm font-bold text-slate-700 gap-1 border-b border-gray-200 pb-1">
                      <div className="flex items-center gap-0.5 w-full">
                        {/* Compact, Integrated Date Selection */}
@@ -431,7 +432,7 @@ export default function App() {
                   </div>
                 </div>
                 
-                <div className="bg-tm-red text-white text-center text-2xl font-bold py-1 rounded mb-2 print:bg-tm-red print:text-white print:print-color-adjust-exact">
+                <div className="bg-tm-red text-white text-center text-2xl font-bold py-1 rounded mb-1 print:bg-tm-red print:text-white print:print-color-adjust-exact">
                    {details.time}
                 </div>
                 <div className="flex flex-col gap-1">
@@ -449,7 +450,7 @@ export default function App() {
               <div className="bg-tm-blue text-white text-center text-xs font-bold py-1 uppercase tracking-widest print:bg-tm-blue print:text-white print:print-color-adjust-exact">
                 Word of the Day
               </div>
-              <div className="bg-tm-blue/90 p-3 text-center print:bg-tm-blue/90 print:print-color-adjust-exact">
+              <div className="bg-tm-blue/90 p-2 text-center print:bg-tm-blue/90 print:print-color-adjust-exact">
                  <input 
                   type="text"
                   value={details.wordOfTheDay}
@@ -465,23 +466,23 @@ export default function App() {
                <div className="text-tm-blue font-bold text-center py-1 italic border-b border-amber-100 text-sm">
                  $ Pricing Standard
                </div>
-               <div className="p-2 text-center font-medium leading-tight">
-                 <p className="text-slate-800 mb-1">Free for members, 38 RMB for visiting non-members.</p>
+               <div className="p-1.5 text-center font-medium leading-tight">
+                 <p className="text-slate-800 mb-0.5">Free for members, 38 RMB for visiting non-members.</p>
                  <p className="text-tm-red font-bold">(Free for first-time attendees)</p>
                </div>
             </div>
 
             {/* Time Rule Table (Read-only, Compacted) */}
             <div className="border border-gray-200 rounded overflow-hidden text-xs">
-              <div className="bg-gray-50 p-1.5 font-bold text-tm-blue border-b border-gray-200 text-xs italic print:bg-gray-50">
+              <div className="bg-gray-50 p-1 font-bold text-tm-blue border-b border-gray-200 text-xs italic print:bg-gray-50">
                 Time Rule
               </div>
               <table className="w-full text-center">
                 <thead>
                   <tr className="bg-gray-50 text-slate-600 border-b border-gray-200 print:bg-gray-50">
-                    <th className="py-1 px-1 font-medium">Type</th>
-                    <th className="py-1 px-1 font-medium border-l border-gray-200">Short<br/>Speech</th>
-                    <th className="py-1 px-1 font-medium border-l border-gray-200">Long<br/>Speech</th>
+                    <th className="py-0.5 px-1 font-medium">Type</th>
+                    <th className="py-0.5 px-1 font-medium border-l border-gray-200">Short<br/>Speech</th>
+                    <th className="py-0.5 px-1 font-medium border-l border-gray-200">Long<br/>Speech</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -510,9 +511,9 @@ export default function App() {
             </div>
 
             {/* Reminder (Read-only) */}
-            <div className="bg-red-50/50 border border-red-100 rounded-lg p-3 print:bg-red-50/50 print:print-color-adjust-exact">
-              <h4 className="text-tm-red font-bold italic mb-2 text-xs">Reminder</h4>
-              <ol className="list-decimal list-inside text-[10px] space-y-1 text-slate-700 font-medium">
+            <div className="bg-red-50/50 border border-red-100 rounded-lg p-2 print:bg-red-50/50 print:print-color-adjust-exact">
+              <h4 className="text-tm-red font-bold italic mb-1 text-xs">Reminder</h4>
+              <ol className="list-decimal list-inside text-[10px] space-y-0.5 text-slate-700 font-medium">
                 {details.etiquette.map((rule, idx) => (
                   <li key={idx} className="pl-1 leading-tight">{rule}</li>
                 ))}
@@ -520,9 +521,9 @@ export default function App() {
             </div>
 
             {/* Officers (Editable Names) */}
-            <div className="mt-4">
-              <h4 className="text-tm-blue font-bold italic uppercase text-xs tracking-wider mb-2 border-b border-gray-200 pb-1">Club Officers</h4>
-              <ul className="space-y-1 text-xs">
+            <div className="mt-2">
+              <h4 className="text-tm-blue font-bold italic uppercase text-xs tracking-wider mb-1 border-b border-gray-200 pb-1">Club Officers</h4>
+              <ul className="space-y-0.5 text-xs">
                 {officers.map((officer, idx) => (
                   <li key={idx} className="flex justify-between items-center group">
                     <span className="text-slate-500 font-bold uppercase text-[10px] whitespace-nowrap mr-2">{officer.role}</span>
@@ -542,10 +543,10 @@ export default function App() {
         </div>
 
         {/* --- Footer --- */}
-        <div className="mt-auto pt-4 border-t-2 border-tm-yellow/50 relative z-10">
+        <div className="mt-auto pt-2 border-t-2 border-tm-yellow/50 relative z-10">
           <div className="text-center">
-             <h4 className="text-tm-blue font-bold italic tracking-widest text-sm mb-1 uppercase">Club Mission</h4>
-             <p className="text-[10px] text-slate-500 italic max-w-2xl mx-auto mb-4 leading-relaxed">
+             <h4 className="text-tm-blue font-bold italic tracking-widest text-sm mb-0.5 uppercase">Club Mission</h4>
+             <p className="text-[10px] text-slate-500 italic max-w-2xl mx-auto mb-2 leading-relaxed">
                "We provide a supportive and positive learning experience in which members are empowered to develop communication and leadership skills, resulting in greater self-confidence and personal growth."
              </p>
 
