@@ -51,14 +51,14 @@
             overflow: hidden;
         }
         #agenda-container {
-            transform: scale(0.96) !important; /* Scale to fit within printer margins */
+            transform: scale(0.93) !important; /* Slightly tighter scale to ensure fit */
             transform-origin: top center !important;
             margin: 0 auto !important;
             box-shadow: none !important;
             width: 210mm !important;
             height: 297mm !important;
             max-height: 297mm !important;
-            overflow: hidden !important; /* Cut off anything that overflows to ensure 1 page */
+            overflow: hidden !important; /* Strictly cut off overflow */
         }
       }
     </style>

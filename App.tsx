@@ -45,6 +45,25 @@ const addMinutes = (timeStr: string, minutesStr: string): string => {
   return `${newHours}:${newMins}`;
 };
 
+const subtractMinutes = (timeStr: string, minutesStr: string): string => {
+  if (!timeStr) return "";
+  
+  const [hours, mins] = timeStr.split(':').map(Number);
+  if (isNaN(hours) || isNaN(mins)) return timeStr;
+
+  // Extract number from string (e.g., "15m" -> 15, "7" -> 7)
+  const durationMatch = minutesStr.match(/([\d.]+)/);
+  const duration = durationMatch ? parseFloat(durationMatch[0]) : 0;
+
+  const date = new Date();
+  date.setHours(hours);
+  date.setMinutes(mins - duration);
+
+  const newHours = String(date.getHours()).padStart(2, '0');
+  const newMins = String(date.getMinutes()).padStart(2, '0');
+  return `${newHours}:${newMins}`;
+};
+
 export default function App() {
   // --- State ---
   const [details, setDetails] = useState(MEETING_DETAILS);
@@ -57,33 +76,70 @@ export default function App() {
   const [selectedDay, setSelectedDay] = useState("4"); // String for free input
   const [zoomLevel, setZoomLevel] = useState(1);
 
+  // --- Logic: Page Close Warning ---
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // Standard way to trigger browser confirmation dialog
+      e.preventDefault();
+      e.returnValue = 'Data will be lost if you leave. Are you sure?'; 
+      return 'Data will be lost if you leave. Are you sure?';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
+
   // --- Logic: Time Calculation ---
   useEffect(() => {
-    // We calculate times entirely based on the first slot + cumulative durations
-    let currentTime = details.time;
+    // Find the anchor: "Opening Remark"
+    const openingIndex = agendaItems.findIndex(item => item.activity.trim() === "Opening Remark");
     
-    const calculatedItems = agendaItems.map((item, index) => {
-      // Capture the calculated start time for the current item
-      const thisItemTime = currentTime;
+    // Deep clone to avoid mutating state directly during calculation
+    let calculatedItems = agendaItems.map(item => ({...item}));
 
-      // Update the running time for the NEXT item by adding current item's duration
-      // We do this for ALL items, including the first one, so the second item gets the correct start time.
-      if (item.duration) {
-         currentTime = addMinutes(currentTime, item.duration);
-      }
+    if (openingIndex !== -1) {
+      // --- ANCHOR FOUND: Calculate outwards from Opening Remark ---
       
-      // First item's time is always locked to the meeting start time (controlled by user)
-      if (index === 0) {
-        return { ...item, time: details.time };
+      // Set the anchor time
+      calculatedItems[openingIndex].time = details.time;
+
+      // 1. BACKWARD PASS (from Opening Remark up to 0)
+      // Start(i) = Start(i+1) - Duration(i)
+      for (let i = openingIndex - 1; i >= 0; i--) {
+        const nextItemTime = calculatedItems[i + 1].time;
+        // Use current item's duration to find when it must have started to end at nextItemTime
+        calculatedItems[i].time = subtractMinutes(nextItemTime, calculatedItems[i].duration || "0");
       }
-      
-      // If it's a section header, we usually don't display the time (visual preference)
+
+      // 2. FORWARD PASS (from Opening Remark down to end)
+      // Start(i) = Start(i-1) + Duration(i-1)
+      for (let i = openingIndex + 1; i < calculatedItems.length; i++) {
+        const prevItem = calculatedItems[i - 1];
+        calculatedItems[i].time = addMinutes(prevItem.time, prevItem.duration || "0");
+      }
+
+    } else {
+      // --- FALLBACK: Standard calculation from top (index 0) ---
+      let currentTime = details.time;
+      calculatedItems = calculatedItems.map((item, index) => {
+        const thisItemTime = currentTime;
+        if (item.duration) {
+           currentTime = addMinutes(currentTime, item.duration);
+        }
+        if (index === 0) return { ...item, time: details.time };
+        return { ...item, time: thisItemTime };
+      });
+    }
+
+    // Hide time for section headers
+    calculatedItems = calculatedItems.map(item => {
       if (item.type === AgendaItemType.SECTION_HEADER) {
-        return { ...item, time: "" }; 
+        return { ...item, time: "" };
       }
-
-      // For all other items, use the calculated time
-      return { ...item, time: thisItemTime };
+      return item;
     });
 
     // Deep compare to avoid infinite render loops
@@ -91,7 +147,7 @@ export default function App() {
     if (hasChanges) {
       setAgendaItems(calculatedItems);
     }
-  }, [details.time, JSON.stringify(agendaItems.map(i => ({t: i.type, d: i.duration})) )]); // Recalc when durations or types change
+  }, [details.time, JSON.stringify(agendaItems.map(i => ({t: i.type, d: i.duration, a: i.activity})))]);
 
   // --- Handlers: CRUD ---
 
@@ -134,7 +190,7 @@ export default function App() {
       time: "",
       activity: type === AgendaItemType.SECTION_HEADER ? "NEW SECTION" : "New Activity",
       role: "...",
-      duration: type === AgendaItemType.SECTION_HEADER ? "" : "5m",
+      duration: type === AgendaItemType.SECTION_HEADER ? "" : "3m",
       type: type,
     };
     setAgendaItems([...agendaItems, newItem]);
@@ -155,7 +211,7 @@ export default function App() {
       date: { selectedWeekday, selectedMonth, selectedDay }
     };
     localStorage.setItem('tm_agenda_data', JSON.stringify(data));
-    alert("Saved successfully! \n\nNote: This data is saved locally on this device only. Clearing your browser cache will delete it.");
+    alert("Saved to local cache! \n\n⚠️ WARNING: Storage time is very short! Data stored in browser cache is temporary and will be lost if you clear cache or close the window in incognito mode. Please print/save as PDF for permanent records.");
   };
 
   const handleLoad = () => {
@@ -192,6 +248,9 @@ export default function App() {
     }
   };
 
+  // Check if Opening Remark exists for conditional rendering of the time input
+  const openingRemarkIndex = agendaItems.findIndex(item => item.activity.trim() === "Opening Remark");
+
   return (
     <div className="min-h-screen bg-gray-200 pb-20 pt-24 flex justify-center font-sans antialiased print:bg-white print:p-0 print:block">
       
@@ -224,7 +283,7 @@ export default function App() {
       <div 
         id="agenda-container"
         style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top center' }}
-        className="w-[210mm] h-[297mm] bg-white shadow-2xl p-5 relative flex flex-col text-slate-800 print:shadow-none print:m-0 print:overflow-hidden box-border"
+        className="w-[210mm] h-[297mm] bg-white shadow-2xl p-3 relative flex flex-col text-slate-800 print:shadow-none print:m-0 print:overflow-hidden box-border"
       >
         
         {/* --- Decoration: Top Right --- */}
@@ -249,7 +308,7 @@ export default function App() {
         </div>
 
         {/* --- Header Section --- */}
-        <header className="border-b-2 border-tm-red/30 pb-2 mb-2 relative z-10">
+        <header className="border-b-2 border-tm-red/30 pb-1 mb-1 relative z-10">
           <div className="flex justify-between items-end mb-1">
             <div className="flex flex-col justify-center">
               <h1 className="text-3xl font-bold text-tm-blue tracking-wide leading-tight">汕头国际演讲俱乐部</h1>
@@ -274,7 +333,7 @@ export default function App() {
         </header>
 
         {/* --- Theme Section --- */}
-        <div className="mb-3 relative z-10">
+        <div className="mb-1 relative z-10">
           <div className="flex items-baseline gap-2 mb-1 w-full">
             <h3 className="text-tm-blue font-bold text-lg uppercase whitespace-nowrap">THEME:</h3>
             <input 
@@ -297,28 +356,30 @@ export default function App() {
         </div>
 
         {/* --- Main Content Grid --- */}
-        <div className="grid grid-cols-12 gap-x-4 gap-y-2 flex-grow relative z-10 items-stretch">
+        <div className="grid grid-cols-12 gap-x-4 gap-y-0 flex-grow relative z-10 items-stretch">
           
           {/* LEFT COLUMN (Agenda) - Approx 60-65% */}
           <div className="col-span-7 flex flex-col">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-xs uppercase text-slate-500 font-bold border-b border-gray-200">
-                  <th className="text-left py-1 w-12">Time</th>
-                  <th className="text-left py-1">Activity</th>
-                  <th className="text-right py-1 w-24">Role</th>
-                  <th className="text-right py-1 w-10">Dur.</th>
-                  <th className="w-6 print:hidden"></th>
+                  <th className="text-left py-0.5 w-12">Time</th>
+                  <th className="text-left py-0.5">Activity</th>
+                  <th className="text-right py-0.5 w-24">Role</th>
+                  <th className="text-right py-0.5 w-10">Dur.</th>
+                  <th className="w-16 print:hidden">Edit</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {agendaItems.map((item, idx) => {
                   const isHeader = item.type === AgendaItemType.SECTION_HEADER;
-                  
+                  // Determine if this row is the "anchor" row for editing the main time
+                  const isAnchorRow = openingRemarkIndex !== -1 ? idx === openingRemarkIndex : idx === 0;
+
                   return (
                     <tr key={idx} className="hover:bg-blue-50/50 group print:hover:bg-transparent relative">
                       {isHeader ? (
-                         <td colSpan={4} className="py-0.5">
+                         <td colSpan={4} className="py-0.5 relative">
                           <div className="bg-tm-red text-white font-bold text-xs uppercase py-1 rounded-sm shadow-sm mt-1 mb-0.5 flex justify-center print:bg-tm-red print:text-white print:print-color-adjust-exact">
                             <input
                               type="text"
@@ -331,7 +392,7 @@ export default function App() {
                       ) : (
                         <>
                           <td className="py-0.5 align-middle">
-                            {idx === 0 ? (
+                            {isAnchorRow ? (
                               <input
                                 type="time"
                                 value={details.time}
@@ -342,7 +403,7 @@ export default function App() {
                               <span className="text-tm-blue font-bold text-xs font-mono block py-1">{item.time}</span>
                             )}
                           </td>
-                          <td className="py-0.5 align-middle">
+                          <td className="py-0.5 align-middle relative">
                             <input
                               type="text"
                               value={item.activity}
@@ -369,12 +430,30 @@ export default function App() {
                         </>
                       )}
                       
-                      {/* Row Controls (Hover) */}
-                      <td className="print:hidden w-8 text-right align-middle">
-                        <div className="flex flex-col gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity absolute right-0 top-1/2 -translate-y-1/2 bg-white shadow-md rounded p-1 z-10">
-                           <button onClick={() => moveRow(idx, 'up')} className="text-[10px] bg-slate-100 hover:bg-slate-200 p-0.5 rounded" title="Move Up">▲</button>
-                           <button onClick={() => moveRow(idx, 'down')} className="text-[10px] bg-slate-100 hover:bg-slate-200 p-0.5 rounded" title="Move Down">▼</button>
-                           <button onClick={() => deleteRow(idx)} className="text-[10px] bg-red-100 text-red-600 hover:bg-red-200 p-0.5 rounded mt-1" title="Delete">✕</button>
+                      {/* Row Controls (Simple Move/Delete) */}
+                      <td className="print:hidden w-16 align-middle text-right px-1">
+                        <div className="flex items-center justify-end gap-1 opacity-10 group-hover:opacity-100 transition-opacity">
+                             <button 
+                               onClick={() => moveRow(idx, 'up')} 
+                               className="p-1 text-slate-400 hover:text-tm-blue hover:bg-blue-100 rounded transition-colors" 
+                               title="Move Up"
+                             >
+                               ▲
+                             </button>
+                             <button 
+                               onClick={() => moveRow(idx, 'down')} 
+                               className="p-1 text-slate-400 hover:text-tm-blue hover:bg-blue-100 rounded transition-colors" 
+                               title="Move Down"
+                             >
+                               ▼
+                             </button>
+                             <button 
+                               onClick={() => deleteRow(idx)} 
+                               className="p-1 text-slate-300 hover:text-red-600 hover:bg-red-100 rounded transition-colors" 
+                               title="Delete"
+                             >
+                               ✕
+                             </button>
                         </div>
                       </td>
                     </tr>
@@ -383,7 +462,7 @@ export default function App() {
               </tbody>
             </table>
             
-            {/* Add Row Buttons */}
+            {/* Add Row Buttons (Bottom) */}
             <div className="mt-4 flex gap-2 print:hidden opacity-50 hover:opacity-100 transition-opacity">
                <button onClick={() => addRow(AgendaItemType.NORMAL)} className="text-xs bg-blue-50 text-blue-600 px-3 py-1 rounded hover:bg-blue-100 border border-blue-200 dashed">+ Add Activity</button>
                <button onClick={() => addRow(AgendaItemType.SECTION_HEADER)} className="text-xs bg-red-50 text-red-600 px-3 py-1 rounded hover:bg-red-100 border border-red-200 dashed">+ Add Section Header</button>
@@ -391,7 +470,7 @@ export default function App() {
           </div>
 
           {/* RIGHT COLUMN (Sidebar) - Approx 35-40% */}
-          <div className="col-span-5 space-y-2">
+          <div className="col-span-5 space-y-1">
             
             {/* LOGO REMOVED */}
 
@@ -543,10 +622,10 @@ export default function App() {
         </div>
 
         {/* --- Footer --- */}
-        <div className="mt-auto pt-2 border-t-2 border-tm-yellow/50 relative z-10">
+        <div className="mt-auto pt-1 border-t-2 border-tm-yellow/50 relative z-10">
           <div className="text-center">
              <h4 className="text-tm-blue font-bold italic tracking-widest text-sm mb-0.5 uppercase">Club Mission</h4>
-             <p className="text-[10px] text-slate-500 italic max-w-2xl mx-auto mb-2 leading-relaxed">
+             <p className="text-[10px] text-slate-500 italic max-w-2xl mx-auto mb-1 leading-relaxed">
                "We provide a supportive and positive learning experience in which members are empowered to develop communication and leadership skills, resulting in greater self-confidence and personal growth."
              </p>
 
